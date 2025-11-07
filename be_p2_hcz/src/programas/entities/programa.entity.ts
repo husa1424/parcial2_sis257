@@ -16,6 +16,13 @@ export enum EstadoPrograma {
   FINALIZADO = 'Finalizado',
 }
 
+export enum AreaConocimiento {
+  DERECHO = 'Derecho',
+  INGENIERIA = 'Ingeniería',
+  ECONOMIA = 'Economía',
+  SALUD = 'Salud',
+}
+
 @Entity('programas_postgrado')
 export class Programa {
   @PrimaryGeneratedColumn('identity')
@@ -45,6 +52,9 @@ export class Programa {
 
   @Column('varchar', { length: 20, nullable: false })
   estado: EstadoPrograma;
+
+  @Column('varchar', { length: 50, nullable: false })
+  areaConocimiento: AreaConocimiento;
 
   @CreateDateColumn()
   fechaCreacion: Date;

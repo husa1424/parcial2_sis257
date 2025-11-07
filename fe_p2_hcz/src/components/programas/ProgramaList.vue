@@ -18,7 +18,7 @@ async function obtenerLista() {
     programa.value = response.data
     console.log('Programas con niveles académicos:', programa.value)
     // Verificar si los niveles académicos están llegando correctamente
-    programa.value.forEach(p => {
+    programa.value.forEach((p) => {
       console.log(`Programa ${p.id} - Nivel Académico:`, p.nivelAcademico)
     })
   } catch (error) {

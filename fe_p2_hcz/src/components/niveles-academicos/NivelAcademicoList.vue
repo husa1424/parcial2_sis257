@@ -5,8 +5,8 @@ import { Dialog, InputGroup, InputGroupAddon, InputText } from 'primevue'
 import Button from 'primevue/button'
 import { computed, onMounted, ref } from 'vue'
 
-// Usar el mismo endpoint que el resto de componentes (coherencia con ProgramaSave etc.)
-const ENDPOINT = 'niveles-academicos'
+const ENDPOINT = 'niveles_academicos'
+
 const nivelAcademico = ref<NivelAcademico[]>([])
 const emit = defineEmits(['edit'])
 const nivelAcademicoDelete = ref<NivelAcademico | null>(null)
@@ -19,23 +19,24 @@ async function obtenerLista() {
 
 const nivelAcademicoFiltrados = computed(() => {
   return nivelAcademico.value.filter(
-    (nivelAcademico) =>
-      nivelAcademico.nombre.toLowerCase().includes(busqueda.value.toLowerCase()) ||
-      nivelAcademico.descripcion.toLowerCase().includes(busqueda.value.toLowerCase()),
+    (nivel) =>
+      nivel.nombre.toLowerCase().includes(busqueda.value.toLowerCase()) ||
+      (nivel.descripcion?.toLowerCase().includes(busqueda.value.toLowerCase()) ?? false),
   )
 })
 
-function emitirEdicion(nivelAcademico: NivelAcademico) {
-  emit('edit', nivelAcademico)
+function emitirEdicion(nivel: NivelAcademico) {
+  emit('edit', nivel)
 }
 
-function mostrarEliminarConfirm(nivelAcademico: NivelAcademico) {
-  nivelAcademicoDelete.value = nivelAcademico
+function mostrarEliminarConfirm(nivel: NivelAcademico) {
+  nivelAcademicoDelete.value = nivel
   mostrarConfirmDialog.value = true
 }
 
 async function eliminar() {
-  await http.delete(`${ENDPOINT}/${nivelAcademicoDelete.value?.id}`)
+  if (!nivelAcademicoDelete.value) return
+  await http.delete(`${ENDPOINT}/${nivelAcademicoDelete.value.id}`)
   obtenerLista()
   mostrarConfirmDialog.value = false
 }
@@ -43,70 +44,66 @@ async function eliminar() {
 onMounted(() => {
   obtenerLista()
 })
+
 defineExpose({ obtenerLista })
 </script>
 
 <template>
   <div>
-    <div>
-      <div class="col-7 pl-0 mt-3">
-        <InputGroup>
-          <InputGroupAddon><i class="pi pi-search"></i></InputGroupAddon>
-          <InputText v-model="busqueda" type="text" placeholder="Buscar por nombre o descripcion" />
-        </InputGroup>
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Nro.</th>
-            <th>Nombre</th>
-            <th>Descripción</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(nivelAcademico, index) in nivelAcademicoFiltrados" :key="nivelAcademico.id">
-            <td>{{ index + 1 }}</td>
-            <td>{{ nivelAcademico.nombre }}</td>
-            <td>{{ nivelAcademico.descripcion }}</td>
-            <td>
-              <Button
-                icon="pi pi-pencil"
-                aria-label="Editar"
-                text
-                @click="emitirEdicion(nivelAcademico)"
-              />
-              <Button
-                icon="pi pi-trash"
-                aria-label="Eliminar"
-                severity="danger"
-                text
-                @click="mostrarEliminarConfirm(nivelAcademico)"
-              />
-            </td>
-          </tr>
-          <tr v-if="nivelAcademicoFiltrados.length === 0">
-            <td colspan="4">No se encontraron resultados.</td>
-          </tr>
-        </tbody>
-      </table>
-      <Dialog
-        v-model:visible="mostrarConfirmDialog"
-        header="Confirmar Eliminación"
-        :style="{ width: '25rem' }"
-      >
-        <p>¿Estás seguro de que deseas eliminar este registro?</p>
-        <div class="flex justify-end gap-2">
-          <Button
-            type="button"
-            label="Cancelar"
-            severity="secondary"
-            @click="mostrarConfirmDialog = false"
-          />
-          <Button type="button" label="Eliminar" @click="eliminar" />
-        </div>
-      </Dialog>
+    <div class="col-7 pl-0 mt-3">
+      <InputGroup>
+        <InputGroupAddon><i class="pi pi-search"></i></InputGroupAddon>
+        <InputText v-model="busqueda" type="text" placeholder="Buscar por nombre o descripción" />
+      </InputGroup>
     </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Nro.</th>
+          <th>Nombre</th>
+          <th>Descripción</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="(nivel, index) in nivelAcademicoFiltrados" :key="nivel.id">
+          <td>{{ index + 1 }}</td>
+          <td>{{ nivel.nombre }}</td>
+          <td>{{ nivel.descripcion }}</td>
+          <td>
+            <Button icon="pi pi-pencil" aria-label="Editar" text @click="emitirEdicion(nivel)" />
+            <Button
+              icon="pi pi-trash"
+              aria-label="Eliminar"
+              severity="danger"
+              text
+              @click="mostrarEliminarConfirm(nivel)"
+            />
+          </td>
+        </tr>
+        <tr v-if="nivelAcademicoFiltrados.length === 0">
+          <td colspan="4">No se encontraron resultados.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <Dialog
+      v-model:visible="mostrarConfirmDialog"
+      header="Confirmar Eliminación"
+      :style="{ width: '25rem' }"
+    >
+      <p>¿Estás seguro de que deseas eliminar este registro?</p>
+      <div class="flex justify-end gap-2">
+        <Button
+          type="button"
+          label="Cancelar"
+          severity="secondary"
+          @click="mostrarConfirmDialog = false"
+        />
+        <Button type="button" label="Eliminar" @click="eliminar" />
+      </div>
+    </Dialog>
   </div>
 </template>
 

@@ -6,7 +6,8 @@ import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
 import { computed, ref, watch } from 'vue'
 
-const ENDPOINT = 'niveles-academicos'
+const ENDPOINT = 'niveles_academicos'
+
 const props = defineProps({
   mostrar: Boolean,
   nivelAcademico: {
@@ -15,6 +16,7 @@ const props = defineProps({
   },
   modoEdicion: Boolean,
 })
+
 const emit = defineEmits(['guardar', 'close'])
 
 const dialogVisible = computed({
@@ -25,6 +27,7 @@ const dialogVisible = computed({
 })
 
 const nivelAcademico = ref<NivelAcademico>({ ...props.nivelAcademico })
+
 watch(
   () => props.nivelAcademico,
   (newVal) => {
@@ -38,16 +41,19 @@ async function handleSave() {
       nombre: nivelAcademico.value.nombre,
       descripcion: nivelAcademico.value.descripcion,
     }
-    if (props.modoEdicion) {
+
+    if (props.modoEdicion && nivelAcademico.value.id) {
       await http.patch(`${ENDPOINT}/${nivelAcademico.value.id}`, body)
     } else {
       await http.post(ENDPOINT, body)
     }
+
     emit('guardar')
-    nivelAcademico.value = {} as NivelAcademico
     dialogVisible.value = false
+
+    nivelAcademico.value = {} as NivelAcademico
   } catch (error: any) {
-    alert(error?.response?.data?.message)
+    alert(error?.response?.data?.message || 'Error al guardar')
   }
 }
 </script>
@@ -76,7 +82,6 @@ async function handleSave() {
           v-model="nivelAcademico.descripcion"
           class="flex-auto"
           autocomplete="off"
-          autofocus
         />
       </div>
       <div class="flex justify-end gap-2">
@@ -86,8 +91,8 @@ async function handleSave() {
           icon="pi pi-times"
           severity="secondary"
           @click="dialogVisible = false"
-        ></Button>
-        <Button type="button" label="Guardar" icon="pi pi-save" @click="handleSave"></Button>
+        />
+        <Button type="button" label="Guardar" icon="pi pi-save" @click="handleSave" />
       </div>
     </Dialog>
   </div>

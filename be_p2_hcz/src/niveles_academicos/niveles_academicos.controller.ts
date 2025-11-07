@@ -17,25 +17,21 @@ export class NivelesAcademicosController {
     private readonly nivelesAcademicosService: NivelesAcademicosService,
   ) {}
 
-  // Crear un nuevo nivel académico
   @Post()
   create(@Body() createNivelesAcademicoDto: CreateNivelesAcademicoDto) {
     return this.nivelesAcademicosService.create(createNivelesAcademicoDto);
   }
 
-  // Listar todos los niveles académicos
   @Get()
   findAll() {
     return this.nivelesAcademicosService.findAll();
   }
 
-  // Obtener un nivel académico por ID
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.nivelesAcademicosService.findOne(+id);
   }
 
-  // Actualizar un nivel académico por ID
   @Patch(':id')
   update(
     @Param('id') id: string,
@@ -44,7 +40,6 @@ export class NivelesAcademicosController {
     return this.nivelesAcademicosService.update(+id, updateNivelesAcademicoDto);
   }
 
-  // Eliminar (soft delete) un nivel académico por ID
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.nivelesAcademicosService.remove(+id);

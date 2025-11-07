@@ -23,7 +23,6 @@ const props = defineProps({
 const emit = defineEmits(['guardar', 'close'])
 
 const nivelAcademico = ref<NivelAcademico[]>([])
-
 const dialogVisible = computed({
   get: () => props.mostrar,
   set: (value) => {
@@ -32,34 +31,33 @@ const dialogVisible = computed({
 })
 
 const programa = ref<Programa>({ ...props.programa })
-const estado = ['En Planificación', 'En curso', 'Finalizado']
+const estadoOptions = ['En Planificación', 'En curso', 'Finalizado']
+const areaConocimientoOptions = ['Derecho', 'Ingeniería', 'Economía', 'Salud']
 
 async function obtenerNivelAcademico() {
-  nivelAcademico.value = await http.get('niveles-academicos').then((response) => response.data)
+  nivelAcademico.value = await http.get('niveles_academicos').then((res) => res.data)
 }
+
 watch(
   () => props.mostrar,
   async (nuevoValor) => {
     if (nuevoValor) {
       await obtenerNivelAcademico()
-      console.log('Niveles académicos cargados:', nivelAcademico.value)
 
       if (props.programa?.id) {
         try {
-          // Obtener el programa actualizado del servidor
           const response = await http.get(`${ENDPOINT}/${props.programa.id}`)
           const programaActualizado = response.data
-
           programa.value = {
             ...programaActualizado,
             idNivelAcademico: programaActualizado.nivelAcademico?.id ?? 0,
             fechaInicio: new Date(programaActualizado.fechaInicio),
             estado:
-              estado.find(
+              estadoOptions.find(
                 (e) => e.toLowerCase() === (programaActualizado.estado?.toLowerCase() ?? ''),
               ) ?? '',
+            areaConocimiento: programaActualizado.areaConocimiento ?? '',
           }
-          console.log('Programa cargado para edición:', programa.value)
         } catch (error) {
           console.error('Error al cargar el programa para editar:', error)
           alert('Error al cargar los datos del programa')
@@ -74,6 +72,7 @@ watch(
           costo: 0,
           fechaInicio: new Date(),
           estado: '',
+          areaConocimiento: '',
         } as Programa
       }
     }
@@ -83,7 +82,7 @@ watch(
 async function handleSave() {
   try {
     const body = {
-      idNivelAcademico: programa.value.idNivelAcademico,
+      idNivelAcademico: programa.value.idNivelAcademico, // enviar solo el ID
       nombre: programa.value.nombre,
       descripcion: programa.value.descripcion,
       version: programa.value.version,
@@ -91,19 +90,21 @@ async function handleSave() {
       costo: programa.value.costo,
       fechaInicio: programa.value.fechaInicio.toISOString(),
       estado: programa.value.estado,
+      areaConocimiento: programa.value.areaConocimiento,
     }
-    console.log('Datos que envío:', body)
+
     if (props.modoEdicion) {
       await http.patch(`${ENDPOINT}/${programa.value.id}`, body)
     } else {
       await http.post(ENDPOINT, body)
     }
+
     emit('guardar')
     programa.value = {} as Programa
     dialogVisible.value = false
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error guardando programa:', error)
-    alert('Error al guardar el programa. Revisa la consola para más detalles.')
+    alert(error?.response?.data?.message || 'Error al guardar el programa')
   }
 }
 </script>
@@ -124,64 +125,68 @@ async function handleSave() {
           optionLabel="nombre"
           optionValue="id"
           class="flex-auto"
+          placeholder="Seleccionar nivel"
         />
       </div>
+
       <div class="flex items-center gap-4 mb-4">
         <label for="nombre" class="font-semibold w-3">Nombre</label>
         <InputText id="nombre" v-model="programa.nombre" class="flex-auto" autocomplete="off" />
       </div>
+
       <div class="flex items-center gap-4 mb-4">
-        <label for="descripcion" class="font-semibold w-3">Descripcion</label>
-        <Textarea
-          id="descripcion"
-          v-model="programa.descripcion"
-          class="flex-auto"
-          autocomplete="off"
-        />
+        <label for="descripcion" class="font-semibold w-3">Descripción</label>
+        <Textarea id="descripcion" v-model="programa.descripcion" class="flex-auto" />
       </div>
+
       <div class="flex items-center gap-4 mb-4">
-        <label for="version" class="font-semibold w-3">Version</label>
-        <InputNumber
-          id="version"
-          v-model.number="programa.version"
-          class="flex-auto"
-          autocomplete="off"
-          type="number"
-        />
+        <label for="version" class="font-semibold w-3">Versión</label>
+        <InputNumber id="version" v-model.number="programa.version" class="flex-auto" />
       </div>
+
       <div class="flex items-center gap-4 mb-4">
-        <label for="duracionMeses" class="font-semibold w-3">Duracion en Meses</label>
-        <InputNumber
-          id="duracionMeses"
-          v-model="programa.duracionMeses"
-          class="flex-auto"
-          autocomplete="off"
-        />
+        <label for="duracionMeses" class="font-semibold w-3">Duración (meses)</label>
+        <InputNumber id="duracionMeses" v-model.number="programa.duracionMeses" class="flex-auto" />
       </div>
+
       <div class="flex items-center gap-4 mb-4">
         <label for="costo" class="font-semibold w-3">Costo</label>
-        <InputNumber id="costo" v-model="programa.costo" class="flex-auto" autocomplete="off" />
+        <InputNumber id="costo" v-model.number="programa.costo" class="flex-auto" />
       </div>
+
       <div class="flex items-center gap-4 mb-4">
         <label for="fechaInicio" class="font-semibold w-3">Fecha de Inicio</label>
         <DatePicker
           id="fechaInicio"
           v-model="programa.fechaInicio"
-          class="flex-auto"
           date-format="yy-mm-dd"
           show-icon
+          class="flex-auto"
         />
       </div>
+
       <div class="flex items-center gap-4 mb-4">
         <label for="estado" class="font-semibold w-3">Estado</label>
         <Select
           id="estado"
           v-model="programa.estado"
-          :options="estado"
+          :options="estadoOptions"
           placeholder="Seleccionar estado"
           class="flex-auto"
         />
       </div>
+
+      <div class="flex items-center gap-4 mb-4">
+        <label for="areaConocimiento" class="font-semibold w-3">Área de Conocimiento</label>
+        <Select
+          id="areaConocimiento"
+          v-model="programa.areaConocimiento"
+          :options="areaConocimientoOptions"
+          placeholder="Seleccionar área"
+          class="flex-auto"
+        />
+      </div>
+
       <div class="flex justify-end gap-2">
         <Button
           type="button"
@@ -189,8 +194,8 @@ async function handleSave() {
           icon="pi pi-times"
           severity="secondary"
           @click="dialogVisible = false"
-        ></Button>
-        <Button type="button" label="Guardar" icon="pi pi-save" @click="handleSave"></Button>
+        />
+        <Button type="button" label="Guardar" icon="pi pi-save" @click="handleSave" />
       </div>
     </Dialog>
   </div>

@@ -9,6 +9,7 @@ export interface Programa {
   duracionMeses: number
   costo: number
   fechaInicio: Date
-  estado: string
+  estado: 'En Planificación' | 'En curso' | 'Finalizado'
+  areaConocimiento: 'Derecho' | 'Ingeniería' | 'Economía' | 'Salud'
   nivelAcademico: NivelAcademico
 }

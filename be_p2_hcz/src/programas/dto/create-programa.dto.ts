@@ -7,11 +7,12 @@ import {
   IsDate,
   IsEnum,
 } from 'class-validator';
-import { EstadoPrograma } from '../entities/programa.entity';
+import { Type } from 'class-transformer';
+import { AreaConocimiento, EstadoPrograma } from '../entities/programa.entity';
 
 export class CreateProgramaDto {
   @IsNotEmpty({ message: 'El campo Nivel Académico es obligatorio' })
-  @IsNumber({}, { message: 'El campo Nivel Académico debe ser numérico' })
+ // @IsNumber({}, { message: 'El campo Nivel Académico debe ser numérico' })
   readonly idNivelAcademico: number;
 
   @IsNotEmpty({ message: 'El campo Nombre es obligatorio' })
@@ -35,13 +36,21 @@ export class CreateProgramaDto {
   readonly duracionMeses: number;
 
   @IsNotEmpty({ message: 'El campo Costo es obligatorio' })
+  @IsNumber({}, { message: 'El campo Costo debe ser numérico' })
   readonly costo: number;
 
   @IsNotEmpty({ message: 'El campo Fecha de Inicio es obligatorio' })
   @IsDate({ message: 'El campo Fecha de Inicio debe ser de tipo fecha' })
+  @Type(() => Date)
   readonly fechaInicio: Date;
 
   @IsNotEmpty({ message: 'El campo Estado es obligatorio' })
   @IsEnum(EstadoPrograma, { message: 'El campo Estado no es válido' })
   readonly estado: EstadoPrograma;
+
+  @IsNotEmpty({ message: 'El campo Área de Conocimiento es obligatorio' })
+  @IsEnum(AreaConocimiento, {
+    message: 'El campo Área de Conocimiento no es válido',
+  })
+  readonly areaConocimiento: AreaConocimiento;
 }
